@@ -33,13 +33,13 @@ def save_to_csv(pairs, filename):
     with open(filename, mode='w', newline='') as file:
         writer = csv.writer(file)
         # Write the header
-        writer.writerow(['Sequence 1', 'Sequence 2'])
+        writer.writerow(['sequence1', 'sequence2'])
         # Write the DNA sequence pairs
         writer.writerows(pairs)
 
 # Parameters
 num_pairs = 200       # Number of pairs
-sequence_length = 50000  # Length of each DNA sequence
+sequence_length = 3000  # Length of each DNA sequence
 mutation_rate = 0.01    # Mutation rate (1%)
 
 # Generate and save data
