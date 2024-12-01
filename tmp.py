@@ -38,8 +38,8 @@ def save_to_csv(pairs, filename):
         writer.writerows(pairs)
 
 # Parameters
-num_pairs = 80       # Number of pairs
-sequence_length = 500000  # Length of each DNA sequence
+num_pairs = 200       # Number of pairs
+sequence_length = 50000  # Length of each DNA sequence
 mutation_rate = 0.01    # Mutation rate (1%)
 
 # Generate and save data
