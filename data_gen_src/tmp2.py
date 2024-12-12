@@ -7,6 +7,6 @@ df = pd.read_csv('mutated_sequences.csv')  # Replace with your actual file name
 df = df.applymap(lambda x: x.upper() if isinstance(x, str) else x)
 
 # Save the updated DataFrame to a new CSV file
-df.to_csv('dataset/mutated_sequences.csv', index=False)
+df.to_csv('mutated_sequences.csv', index=False)
 
 print("All lowercase characters have been converted to uppercase.")

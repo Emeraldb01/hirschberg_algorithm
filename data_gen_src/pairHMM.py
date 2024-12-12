@@ -9,67 +9,99 @@ nucleotide_to_index = {nuc: idx for idx, nuc in enumerate(alphabet)}
 index_to_nucleotide = {idx: nuc for nuc, idx in nucleotide_to_index.items()}
 
 # Define HMM parameters
-n_states = 3  # Match, Insertion, Deletion
+n_states = 4  # Match, Insertion, Deletion, Mismatch
 
-# Transition probabilities
-trans_probs = np.array([
-    [0.7, 0.2, 0.1],  # Match -> Match, Insert, Delete
-    [0.3, 0.4, 0.3],  # Insert -> Match, Insert, Delete
-    [0.5, 0.1, 0.4],  # Delete -> Match, Insert, Delete
-])
-
-# Emission probabilities
+# Base emission probabilities
 emission_probs = np.array([
-    [0.25, 0.25, 0.25, 0.25],  # Insert: Random emission
-    [0.1, 0.4, 0.4, 0.1],      # Insert: Prefer C and G
-    [0.0, 0.0, 0.0, 0.0],       # Delete: No emission
+    [1.0, 0.0, 0.0, 0.0],  # Match: Original nucleotide (emission handled directly)
+    [0.1, 0.4, 0.4, 0.1],  # Insert: Random nucleotide
+    [1.0, 0.0, 0.0, 0.0],  # Delete: No emission
+    [0.1, 0.4, 0.4, 0.1],  # Mismatch: Random nucleotide
 ])
 
-# Initial state probabilities
-start_probs = np.array([0.8, 0.1, 0.1])  # Most likely to start in Match
-
-# Create the HMM model
-model = hmm.MultinomialHMM(n_components=n_states, n_iter=100, tol=0.01)
-model.startprob_ = start_probs
-model.transmat_ = trans_probs
-model.emissionprob_ = emission_probs
-model.n_trials = 1
-
+# Function to configure HMM for different scenarios
+def configure_hmm(trans_probs):
+    model = hmm.MultinomialHMM(n_components=n_states, n_iter=100, tol=0.01)
+    model.n_trials = 1  # Specify the number of trials per observation
+    model.startprob_ = np.array([1.0, 0.0, 0.0, 0.0])  # Always start in Match
+    model.transmat_ = trans_probs
+    model.emissionprob_ = emission_probs
+    return model
 
 # Function to generate a mutated sequence
-def generate_mutated_sequence(original_sequence):
-    # Capitalize the input sequence
+def generate_mutated_sequence(model, original_sequence):
     original_sequence = original_sequence.upper()
-
-    # Encode sequence length
     seq_length = len(original_sequence)
 
-    # Simulate the HMM state sequence
     state_sequence, _ = model.sample(seq_length)
-
+    # Extract state indices from the one-hot encoded state sequence
+    state_sequence_indices = [np.argmax(state) for state in state_sequence]
+    
     mutated_sequence = []
-    for i, state in enumerate(state_sequence):
-        if state[0] == 0:  # Match state
-            mutated_sequence.append(original_sequence[i])  # Keep original nucleotide
-        elif state[0] == 1:  # Insert state
-            # Randomly select a nucleotide based on Insert emission probabilities
-            random_nucleotide = random.choices(
-                population=alphabet,
-                weights=emission_probs[1],
-                k=1
-            )[0]
+
+    for i, state in enumerate(state_sequence_indices):
+        if state == 0:  # Match state
+            mutated_sequence.append(original_sequence[i])
+        elif state == 1:  # Insert state
+            # Randomly decide how many nucleotides to insert (between 1 and 5)
+            num_insertions = random.randint(1, 8)
+            
+            for _ in range(num_insertions):
+                random_nucleotide = random.choices(population=alphabet, weights=emission_probs[1], k=1)[0]
+                mutated_sequence.append(random_nucleotide)
+        elif state == 2:  # Delete state
+            continue  # Skip this nucleotide
+        elif state == 3:  # Mismatch state
+            random_nucleotide = random.choices(population=alphabet, weights=emission_probs[3], k=1)[0]
             mutated_sequence.append(random_nucleotide)
-        elif state[0] == 2:  # Delete state
-            # Skip this nucleotide (no output)
-            continue
 
     return "".join(mutated_sequence)
 
-# Read the original CSV file with sequences
-df = pd.read_csv('dna_sequences.csv')  # Assuming sequences are in a column named 'sequence1'
 
-# Generate mutated sequences using the HMM model
-df['Generated'] = df['sequence1'].apply(generate_mutated_sequence)
+
+# Custom configurations for each group
+configs = [
+    {"trans_probs": (
+        [0.95, 0.005, 0.005, 0.04],  # Mostly Match
+        [0.8, 0.2, 0.0, 0.0],
+        [0.8, 0.0, 0.2, 0.0],
+        [1.0, 0.0, 0.0, 0.0],
+    )},
+    {"trans_probs": (
+        [0.6, 0.2, 0.1, 0.1],  # High Insert/Delete
+        [0.8, 0.2, 0.0, 0.0],
+        [0.5, 0.0, 0.5, 0.0],
+        [0.7, 0.3, 0.0, 0.0],
+    )},
+    {"trans_probs": (
+        [0.8, 0.2, 0.0, 0.0],  # Only Insert
+        [0.7, 0.3, 0.0, 0.0],
+        [0.7, 0.0, 0.3, 0.0],
+        [0.7, 0.3, 0.0, 0.0],
+    )},
+    {"trans_probs": (
+        [0.8, 0.0, 0.2, 0.0],  # Only Delete
+        [0.7, 0.0, 0.3, 0.0],
+        [0.5, 0.0, 0.5, 0.0],
+        [0.7, 0.0, 0.3, 0.0],
+    )},
+    {"trans_probs": (
+        [0.9, 0.0, 0.0, 0.1],  # Only Mismatch
+        [0.0, 0.0, 0.0, 1.0],
+        [0.0, 0.0, 0.0, 1.0],
+        [0.8, 0.0, 0.0, 0.2],
+    )},
+]
+
+# Read the original CSV file
+df = pd.read_csv('data_gen_src/dna_sequences.csv')
+
+# Generate sequences for each configuration
+all_sequences = []
+for idx, config in enumerate(configs):
+    model = configure_hmm(config["trans_probs"])
+    for _ in range(3):  # Generate 3 sequences per group
+        df[f'Group_{idx+1}'] = df['sequence1'].apply(lambda seq: generate_mutated_sequence(model, seq))
 
 # Save the results to a new CSV file
 df.to_csv('mutated_sequences.csv', index=False)

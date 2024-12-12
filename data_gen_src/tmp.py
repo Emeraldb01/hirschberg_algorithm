@@ -1,50 +1,34 @@
-import random
-import csv
+import pandas as pd
 
-def generate_random_dna(length):
-    """Generate a random DNA sequence of a given length."""
-    return ''.join(random.choices('ACGT', k=length))
+# Function to reformat the CSV
+def reformat_csv(input_csv, output_csv):
+    # Load the original CSV
+    df = pd.read_csv(input_csv)
 
-def introduce_mutations(sequence, mutation_rate=0.01):
-    """Introduce random mutations into a DNA sequence."""
-    sequence = list(sequence)
-    for i in range(len(sequence)):
-        if random.random() < mutation_rate:
-            mutation_type = random.choice(['substitution', 'insertion', 'deletion'])
-            if mutation_type == 'substitution':
-                sequence[i] = random.choice('ACGT'.replace(sequence[i], ''))
-            elif mutation_type == 'insertion':
-                sequence.insert(i, random.choice('ACGT'))
-            elif mutation_type == 'deletion':
-                sequence[i] = ''
-    return ''.join(sequence)
+    # Prepare a list to store rows for the new DataFrame
+    rows = []
 
-def generate_dna_pairs(num_pairs, sequence_length, mutation_rate):
-    """Generate pairs of DNA sequences with one sequence mutated."""
-    pairs = []
-    for _ in range(num_pairs):
-        original = generate_random_dna(sequence_length)
-        mutated = introduce_mutations(original, mutation_rate)
-        pairs.append((original, mutated))
-    return pairs
+    # Iterate over each row in the original CSV
+    for idx, row in df.iterrows():
+        sequence1 = row['sequence1']
 
-def save_to_csv(pairs, filename):
-    """Save DNA sequence pairs to a CSV file."""
-    with open(filename, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        # Write the header
-        writer.writerow(['sequence1', 'sequence2'])
-        # Write the DNA sequence pairs
-        writer.writerows(pairs)
+        # Append a new row for each group column
+        for group_col in ['Group_1','Group_2', 'Group_3', 'Group_4', 'Group_5']:
+            sequence2 = row[group_col]
+            rows.append({'sequence1': sequence1, 'sequence2': sequence2})
 
-# Parameters
-num_pairs = 200       # Number of pairs
-sequence_length = 3000  # Length of each DNA sequence
-mutation_rate = 0.01    # Mutation rate (1%)
+    # Create a new DataFrame
+    reformatted_df = pd.DataFrame(rows)
 
-# Generate and save data
-dna_pairs = generate_dna_pairs(num_pairs, sequence_length, mutation_rate)
-save_to_csv(dna_pairs, "synthetic_dna_pairs.csv")
+    # Save the reformatted DataFrame to a new CSV
+    reformatted_df.to_csv(output_csv, index=False)
 
-print("DNA sequence pairs saved to 'synthetic_dna_pairs.csv'.")
+if __name__ == "__main__":
+    # Specify the input and output CSV file paths
+    input_csv = "mutated_sequences.csv"
+    output_csv = "reformatted_sequences.csv"
 
+    # Reformat the CSV
+    reformat_csv(input_csv, output_csv)
+
+    print(f"Reformatted CSV saved to '{output_csv}'.")
