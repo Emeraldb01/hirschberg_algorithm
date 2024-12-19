@@ -34,4 +34,4 @@ def verify_alignments(hir_file, glo_file):
         print("All alignments match. The second method is consistent with the first.")
 
 # Example usage
-verify_alignments('alignment_results_hirschberg.csv', 'alignment_results_global.csv')
+verify_alignments('results/hir_mut_results.csv', 'results/glo_mut_results.csv')
