@@ -1,6 +1,6 @@
 # Implementation and Benchmarking of Hirchberg’s Algorithm
 
-Hirchberg’s algorithm is a dynamic programming algorithm introduced during this course. Its space optimization made it an unique algorithm for aligning long sequences, it allows compact space while still retaining the alignment with no loss. 
+Hirchberg’s algorithm is a dynamic programming algorithm introduced during this course. Its space optimization made it an unique algorithm for aligning long sequences, it allows compact space while still retaining the alignment with no loss. There are also some visulizations of the algorithms made here!
 
 Development Team:
 - Nai-Syuan Chang(nc47@illinois.edu)
