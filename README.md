@@ -7,7 +7,7 @@ Development Team:
 - Taisia Kalinina(taisiak2@illinois.edu)
 
 
-The Aligorithm Implementations can be found in global_align.ipynb. The algorithms can be generally described in the following manner. 
+The Aligorithm Implementations can be found in align_functions.ipynb. The algorithms can be generally described in the following manner. 
 ## Needleman–Wunsch Algorithm
 This dynamic programming algorithm can be broken down into three main steps. 
 
